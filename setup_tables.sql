@@ -1,5 +1,4 @@
-drop schema step_library cascade;
-
+-- drop schema step_library cascade;
 create schema step_library;
 
 set search_path to step_library;
@@ -64,4 +63,4 @@ create view highest_demand_books as select t1.group_id from no_of_times_borrowed
 
 create view group_ids_of_books_that_are_in_highest_demand_and_not_available as select * from highest_demand_books h where h.group_id not in (select b.group_id from books b join highest_demand_books h on b.group_id = h.group_id where b.status= 'available' group by b.group_id);
 
-create view books_that_are_in_highest_demand_and_not_available as select bg.book_name from book_group bg join group_ids_of_books_that_are_in_highest_demand_and_not_available h on h.group_id=bg.group_id; 
+create view books_that_are_in_highest_demand_and_not_available as select bg.book_name from book_group bg join group_ids_of_books_that_are_in_highest_demand_and_not_available h on h.group_id=bg.group_id;
