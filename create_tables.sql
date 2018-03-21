@@ -58,4 +58,4 @@ CREATE OR REPLACE FUNCTION make_status_available() RETURNS TRIGGER AS $$
   END;
 $$ LANGUAGE plpgsql;
 
-create trigger return_trigger after update of returned_date ON register for each row execute procedure make_status_available();
+create trigger return_trigger after insert or update of returned_date ON register for each row execute procedure make_status_available();
