@@ -41,9 +41,9 @@ create view books_not_borrowed_in_last_3_months_and_has_more_than_10_copies as s
 
 create view num_of_times_borrowed as select group_id,count(group_id) as noOfTimes from books b join register r on r.book_id=b.book_id group by group_id;
 
-create or replace view borrowers_having_book_for_15_days as select emp_id,name,email from (select borrower_id from register where (select now()::date - borrowed_date::date>15 and returned_date is null))t1 join users on t1.borrower_id=users.emp_id;
+create or replace view borrowers_having_book_for_15_days as select distinct emp_id,name,email from (select borrower_id from register where (select now()::date - borrowed_date::date>15 and returned_date is null))t1 join users on t1.borrower_id=users.emp_id;
 
-create or replace view no_of_books_user_holding as select borrower_id,count(*) as noOfBooksBorrowed from register where returned_date is null group by borrower_id;
+create or replace view no_of_books_user_holding as select distinct borrower_id,count(*) as noOfBooksBorrowed from register where returned_date is null group by borrower_id;
 
 create or replace view borrower_having_more_than_2_books as select emp_id,name,email from no_of_books_user_holding t1 join users on t1.noOfBooksBorrowed>2;
 

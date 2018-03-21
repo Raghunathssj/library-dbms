@@ -45,6 +45,9 @@ REFERENCES books(book_id);
 CREATE OR REPLACE FUNCTION make_status_borrowed() RETURNS TRIGGER AS $$
   BEGIN
     update books set status='borrowed' where books.book_id=new.book_id;
+    if new.returned_date is not null then
+      update books set status='available' where books.book_id=new.book_id;
+    end if;
     RETURN NEW;
   END;
 $$ LANGUAGE plpgsql;
@@ -58,4 +61,4 @@ CREATE OR REPLACE FUNCTION make_status_available() RETURNS TRIGGER AS $$
   END;
 $$ LANGUAGE plpgsql;
 
-create trigger return_trigger after insert or update of returned_date ON register for each row execute procedure make_status_available();
+create trigger return_trigger after update of returned_date ON register for each row execute procedure make_status_available();
