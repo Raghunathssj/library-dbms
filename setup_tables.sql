@@ -86,6 +86,14 @@ create or replace view borrower_having_more_than_2_books as select emp_id,name,e
 
 create or replace view borrower_having_more_than_2_books_and_book_for_15_days as select t1.emp_id,t1.name,t1.email from borrowers_having_book_for_15_days t1 join borrower_having_more_than_2_books t2 on t1.emp_id=t2.emp_id;
 
+create or replace function books_returned_in(int,int) returns table (group_id integer,book_id varchar,borrower_id integer,holding_period integer) as $$
+  select b.group_id,r.book_id,r.borrower_id,(r.returned_date - r.borrowed_date) as holding_period from register r join books b on b.book_id=r.book_id where (extract(month from returned_date)=$1 and extract(year from returned_date)=$2)$$
+language sql;
+
 create or replace function average_period_of_holding_books_in(int,int) returns table (average_period_of_holding_books numeric) as $$
-  select avg(t1.holding_period) from (select *,(r.returned_date - r.borrowed_date) as holding_period from register r join books b on b.book_id=r.book_id where (extract(month from returned_date)=$1 and extract(year from returned_date)=$2))t1$$
+  select avg(t1.holding_period) from books_returned_in($1,$2) t1 $$
+language sql;
+
+create or replace function users_who_returned_book_in_7_days(int,int) returns table (emp_id integer,name varchar,email varchar) as $$
+  select u.* from (select t1.borrower_id from books_returned_in($1,$2) t1 where t1.holding_period<=7)t2 join users u on u.emp_id=t2.borrower_id$$
 language sql;
