@@ -6,14 +6,17 @@ create view max_copies (book_name,noOfCopies) as select book_name,noOfCopies fro
 
 create view books_with_5_or_less_copies (book_name,noOfCopies) as select * from copies_of_book t1 where t1.noOfCopies<=5;
 
+-- first int is for month and second int is for year
 create or replace function no_of_times_books_borrowed_in(int,int) returns table (group_id int,no_of_times_borrowed bigint) as $$
   select b.group_id,count(*) from register r join books b on b.book_id=r.book_id where (extract(month from borrowed_date)=$1 and extract(year from borrowed_date)=$2) group by b.group_id$$
 language sql;
 
+-- first int is for month and second int is for year
 create or replace function books_borrowed_in(int,int) returns table (group_id int,book_name varchar) as $$
   select distinct g.group_id,g.book_name from (select * from no_of_times_books_borrowed_in($1,$2)) t1 join book_group g on t1.group_id=g.group_id$$
 language sql;
 
+-- first int is for month and second int is for year
 create or replace function max_no_of_times_borrowed_in(int,int) returns table (group_id int,book_name varchar) as $$
   select g.group_id,g.book_name from (select * from no_of_times_books_borrowed_in($1,$2)) t1 join book_group g on t1.group_id=g.group_id where t1.no_of_times_borrowed=(select max(no_of_times_borrowed) from no_of_times_books_borrowed_in($1,$2))$$
 language sql;
@@ -56,21 +59,22 @@ create view group_ids_of_books_that_are_in_highest_demand_and_not_available as s
 
 create view books_that_are_in_highest_demand_and_not_available as select bg.book_name from book_group bg join group_ids_of_books_that_are_in_highest_demand_and_not_available h on h.group_id=bg.group_id;
 
-
+-- first int is for month and second int is for year
 create or replace function books_returned_in(int,int) returns table (group_id integer,book_id varchar,borrower_id integer,holding_period integer) as $$
   select b.group_id,r.book_id,r.borrower_id,(r.returned_date - r.borrowed_date) as holding_period from register r join books b on b.book_id=r.book_id where (extract(month from returned_date)=$1 and extract(year from returned_date)=$2)$$
 language sql;
 
+-- first int is for month and second int is for year
 create or replace function users_who_returned_book_in_7_days(int,int) returns table (emp_id integer,name varchar,email varchar) as $$
   select u.* from (select t1.borrower_id from books_returned_in($1,$2) t1 where t1.holding_period<=7)t2 join users u on u.emp_id=t2.borrower_id$$
 language sql;
 
-
+-- first int is for month and second int is for year
 create or replace function average_period_of_holding_books_in(int,int) returns table (average_period_of_holding_books numeric) as $$
   select avg(t1.holding_period) from books_returned_in($1,$2) t1 $$
 language sql;
 
-
+-- first int is for month and second int is for year
 create or replace function books_borrowed_by_X_in(int,int) returns table (borrower_id int,count bigint) as $$
   select borrower_id,count(borrower_id) from register where (
     extract(month from borrowed_date)=$1 and extract(year from borrowed_date)=$2
@@ -78,6 +82,7 @@ create or replace function books_borrowed_by_X_in(int,int) returns table (borrow
 $$
 language sql;
 
+-- first int is for month and second int is for year
 create or replace function maximum_books_borrowed_by_in(int,int) returns table (emp_id int, user_name varchar,email_id varchar) as $$
   select u.* from users u join
     (
