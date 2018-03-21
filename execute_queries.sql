@@ -20,7 +20,8 @@ select * from books_not_borrowed_in_last_4_months;
 select * from books_not_borrowed_in_last_3_months_and_has_more_than_10_copies;
 
 -- 7.Library user who borrowed the maximum books in a given period. (Eg: Jan 2018)
---NOT YET IMPLEMENTED
+--Specify month and year;
+select * from maximum_books_borrowed_by_in(3,2018);
 
 -- 8.Library user(s) who are in possession of a library book for more then 15 days.
 select * from borrowers_having_book_for_15_days;

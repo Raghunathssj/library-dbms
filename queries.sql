@@ -69,3 +69,20 @@ language sql;
 create or replace function average_period_of_holding_books_in(int,int) returns table (average_period_of_holding_books numeric) as $$
   select avg(t1.holding_period) from books_returned_in($1,$2) t1 $$
 language sql;
+
+
+create or replace function books_borrowed_by_X_in(int,int) returns table (borrower_id int,count bigint) as $$
+  select borrower_id,count(borrower_id) from register where (
+    extract(month from borrowed_date)=$1 and extract(year from borrowed_date)=$2
+  )group by borrower_id
+$$
+language sql;
+
+create or replace function maximum_books_borrowed_by_in(int,int) returns table (emp_id int, user_name varchar,email_id varchar) as $$
+  select u.* from users u join
+    (
+      select * from books_borrowed_by_X_in($1,$2)
+    ) t1
+  on u.emp_id=t1.borrower_id where t1.count=(select max(count) from books_borrowed_by_X_in($1,$2))
+$$
+language sql;
