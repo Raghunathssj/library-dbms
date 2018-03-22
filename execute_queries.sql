@@ -1,5 +1,7 @@
 set search_path to step_library;
 
+update books set status='lost' where book_id='1000-1';
+
 -- 1.All books available in library
 select * from copies_of_book;
 
@@ -39,3 +41,5 @@ select * from users_who_returned_book_in_7_days(3,2018);
 -- 12.Average period of holding the borrowed books that were returned in a certain period. (Eg: Jan 2018).
 --Specify month and year in number;
 select * from average_period_of_holding_books_in(3,2018);
+
+select * from books;

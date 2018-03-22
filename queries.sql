@@ -3,6 +3,7 @@ set search_path to step_library;
 create view copies_of_book (book_name,noOfCopies) as
   select g.book_name,count(*) as noOfCopies
     from books b join book_group g on g.group_id=b.group_id
+    where b.status!='lost'
       group by g.book_name order by noOfCopies desc;
 
 create view max_copies (book_name,noOfCopies) as
@@ -37,42 +38,31 @@ create or replace function max_no_of_times_borrowed_in(int,int)
         where t1.no_of_times_borrowed=(select max(no_of_times_borrowed)from no_of_times_books_borrowed_in($1,$2))$$
 language sql;
 
+-- int is for number of days
+create or replace function books_borrowed_in_last_N_days(int)
+  returns table (group_id int) as $$
+    select b.group_id from register r left join books b on r.book_id=b.book_id where current_date - r.borrowed_date <= $1 order by r.borrowed_date
+$$language sql;
 
-create view books_borrowed_in_last_4_months as
-  select book_id from register r
-    where (select now()::date - r.borrowed_date::date) < 120;
-
-create view group_ids_of_books_borrowed_in_last_4_months as
-  select group_id from books b join books_borrowed_in_last_4_months v on b.book_id=v.book_id;
-
---extract fucntion for books_not_borrowed_in_last_N_months
+-- int is for number of days
+create or replace function books_not_borrowed_in_last_N_days(int)
+  returns table (book_name varchar,group_id int) as $$
+  select g.book_name,g.group_id from book_group g where g.group_id not in
+    (select * from books_borrowed_in_last_N_days(120))
+$$language sql;
 
 create view books_not_borrowed_in_last_4_months as
-  select bg.book_name,bg.group_id from
-    book_group bg left outer join group_ids_of_books_borrowed_in_last_4_months v
-      on bg.group_id=v.group_id where bg.group_id not in (select * from group_ids_of_books_borrowed_in_last_4_months);
-
+  select * from books_not_borrowed_in_last_N_days(120);
 
 create view more_than_10_copies (book_name,noOfCopies) as
   select * from copies_of_book t1 where t1.noOfCopies>10;
 
-create view books_borrowed_in_last_3_months as
-  select book_id from register r where (select now()::date - r.borrowed_date::date) < 90;
-
-create view group_ids_of_books_borrowed_in_last_3_months as
-  select group_id from books b join books_borrowed_in_last_3_months v on b.book_id=v.book_id;
-
 create view books_not_borrowed_in_last_3_months as
-  select bg.book_name,bg.group_id from book_group bg left outer join group_ids_of_books_borrowed_in_last_3_months v
-    on bg.group_id=v.group_id where bg.group_id not in (select * from group_ids_of_books_borrowed_in_last_3_months);
-
---extract fucntion for books_not_borrowed_in_last_N_months
+  select * from books_not_borrowed_in_last_N_days(90);
 
 create view books_not_borrowed_in_last_3_months_and_has_more_than_10_copies as
   select v1.book_name,v1.group_id from books_not_borrowed_in_last_3_months v1
     join more_than_10_copies v2 on v1.book_name=v2.book_name;
-
-
 
 
 create view num_of_times_borrowed as
