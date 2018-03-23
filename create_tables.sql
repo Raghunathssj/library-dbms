@@ -8,14 +8,14 @@ create table users (
   email varchar(100)
 );
 
-create table books (
+create table books_copies (
   group_id integer,
   book_id varchar(11) primary key,
   added_on date,
   status varchar(10)
 );
 
-create table book_group (
+create table books (
   group_id integer primary key,
   book_name varchar(100), author varchar(200),
   pages integer, ISBN varchar(20), publisher varchar(200),
@@ -28,10 +28,10 @@ create table register (
   returned_date date
 );
 
-alter table books
+alter table books_copies
 add constraint fk_group_id
 FOREIGN KEY (group_id)
-REFERENCES book_group(group_id);
+REFERENCES books(group_id);
 
 alter table register
 add constraint fk_borrower_id
@@ -41,13 +41,13 @@ REFERENCES users(emp_id);
 alter table register
 add constraint fk_book_id
 FOREIGN KEY (book_id)
-REFERENCES books(book_id);
+REFERENCES books_copies(book_id);
 
 CREATE OR REPLACE FUNCTION make_status_borrowed() RETURNS TRIGGER AS $$
   BEGIN
-    update books set status='borrowed' where books.book_id=new.book_id;
+    update books_copies bc set status='borrowed' where bc.book_id=new.book_id;
     if new.returned_date is not null then
-      update books set status='available' where books.book_id=new.book_id;
+      update books_copies bc set status='available' where bc.book_id=new.book_id;
     end if;
     RETURN NEW;
   END;
@@ -57,7 +57,7 @@ create trigger borrow_trigger after insert ON register for each row execute proc
 
 CREATE OR REPLACE FUNCTION make_status_available() RETURNS TRIGGER AS $$
   BEGIN
-    update books set status='available' where books.book_id=new.book_id;
+    update books_copies bc set status='available' where bc.book_id=new.book_id;
     RETURN NEW;
   END;
 $$ LANGUAGE plpgsql;
