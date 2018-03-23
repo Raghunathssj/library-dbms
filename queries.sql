@@ -82,23 +82,23 @@ create or replace view num_of_times_borrowed as
     from books_copies b join register r on r.book_id=b.book_id group by group_id;
 
 create or replace view borrowers_having_book_for_15_days as
-  select distinct emp_id,name,email from
+  select distinct user_id,name,email from
     (select borrower_id from register
       where (select now()::date - borrowed_date::date>15 and returned_date is null)
     )t1
-    join users on t1.borrower_id=users.emp_id;
+    join users on t1.borrower_id=users.user_id;
 
 create or replace view no_of_books_user_holding as
   select distinct borrower_id,count(*) as noOfBooksBorrowed from
     register where returned_date is null group by borrower_id;
 
 create or replace view borrower_having_more_than_2_books as
-  select emp_id,name,email from no_of_books_user_holding t1
+  select user_id,name,email from no_of_books_user_holding t1
     join users on t1.noOfBooksBorrowed>2;
 
 create or replace view borrower_having_more_than_2_books_and_book_for_15_days as
-  select t1.emp_id,t1.name,t1.email from borrowers_having_book_for_15_days t1
-    join borrower_having_more_than_2_books t2 on t1.emp_id=t2.emp_id;
+  select t1.user_id,t1.name,t1.email from borrowers_having_book_for_15_days t1
+    join borrower_having_more_than_2_books t2 on t1.user_id=t2.user_id;
 
 
 create or replace view highest_demand_books as
@@ -124,9 +124,9 @@ $$language sql;
 
 -- first int is for month and second int is for year
 create or replace function users_who_returned_book_in_7_days(int,int)
-  returns table (emp_id integer,name varchar,email varchar) as $$
+  returns table (user_id integer,name varchar,email varchar) as $$
     select u.* from (select t1.borrower_id from books_returned_in($1,$2) t1
-      where t1.holding_period<=7)t2 join users u on u.emp_id=t2.borrower_id
+      where t1.holding_period<=7)t2 join users u on u.user_id=t2.borrower_id
 $$language sql;
 
 -- first int is for month and second int is for year
@@ -145,10 +145,10 @@ $$language sql;
 
 -- first int is for month and second int is for year
 create or replace function maximum_books_borrowed_by_in(int,int)
-  returns table (emp_id int, user_name varchar,email_id varchar) as $$
+  returns table (user_id int, user_name varchar,email_id varchar) as $$
     select u.* from users u join
       (
         select * from books_borrowed_by_X_in($1,$2)
       ) t1
-    on u.emp_id=t1.borrower_id where t1.count=(select max(count) from books_borrowed_by_X_in($1,$2))
+    on u.user_id=t1.borrower_id where t1.count=(select max(count) from books_borrowed_by_X_in($1,$2))
 $$language sql;

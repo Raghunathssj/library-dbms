@@ -3,7 +3,7 @@ create schema step_library;
 set search_path to step_library;
 
 create table users (
-  emp_id integer primary key,
+  user_id integer primary key,
   name varchar(100),
   email varchar(100)
 );
@@ -36,7 +36,7 @@ REFERENCES books(group_id);
 alter table register
 add constraint fk_borrower_id
 FOREIGN KEY (borrower_id)
-REFERENCES users(emp_id);
+REFERENCES users(user_id);
 
 alter table register
 add constraint fk_book_id
