@@ -94,11 +94,19 @@ create or replace view no_of_books_user_holding as
 
 create or replace view borrower_having_more_than_2_books as
   select user_id,name,email from no_of_books_user_holding t1
-    join users on t1.noOfBooksBorrowed>2;
+    join users u on t1.borrower_id=u.user_id where t1.noOfBooksBorrowed>2;
+
+create or replace view borrower_having_atleast_2_books_for_15_days as
+  with c as (
+    select r.borrower_id,count(*) as cnt from register r
+    where r.returned_date is null and current_date - r.borrowed_date > 15
+    group by r.borrower_id
+  ) select * from c where c.cnt >=2;
 
 create or replace view borrower_having_more_than_2_books_and_book_for_15_days as
-  select t1.user_id,t1.name,t1.email from borrowers_having_book_for_15_days t1
-    join borrower_having_more_than_2_books t2 on t1.user_id=t2.user_id;
+  select t2.user_id,t2.name,t2.email from
+    borrower_having_atleast_2_books_for_15_days t1
+    join borrower_having_more_than_2_books t2 on t1.borrower_id=t2.user_id;
 
 
 create or replace view highest_demand_books as
