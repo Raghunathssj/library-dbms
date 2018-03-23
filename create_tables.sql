@@ -11,6 +11,7 @@ create table users (
 create table books (
   group_id integer,
   book_id varchar(11) primary key,
+  added_on date,
   status varchar(10)
 );
 

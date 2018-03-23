@@ -45,10 +45,22 @@ create or replace function books_borrowed_in_last_N_days(int)
 $$language sql;
 
 -- int is for number of days
+create or replace function books_added_before_N_days(int)
+  returns table (group_id int) as $$
+  select b.group_id from
+    (select group_id,count(group_id) from books
+      where added_on + $1 * interval '1 day' > current_date
+      group by group_id) rab
+    join (select group_id,count(group_id) from books group by group_id) b
+    on b.group_id=rab.group_id where b.count=rab.count;
+$$ language sql;
+
+-- int is for number of days
 create or replace function books_not_borrowed_in_last_N_days(int)
   returns table (book_name varchar,group_id int) as $$
   select g.book_name,g.group_id from book_group g where g.group_id not in
-    (select * from books_borrowed_in_last_N_days(120))
+    (select * from books_borrowed_in_last_N_days($1) union
+    select * from books_added_before_N_days($1))
 $$language sql;
 
 create view books_not_borrowed_in_last_4_months as
